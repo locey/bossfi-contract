@@ -1,0 +1,17 @@
+{
+  "name": "pump-staking-uups",
+  "version": "1.0.0",
+  "scripts": {
+    "test": "hardhat test",
+    "deploy": "hardhat run scripts/deploy.js --network sepolia",
+    "upgrade": "hardhat run scripts/upgrade.js --network sepolia"
+  },
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@openzeppelin/contracts-upgradeable": "^4.9.3",
+    "@openzeppelin/hardhat-upgrades": "^1.21.0",
+    "chai": "^4.3.7",
+    "ethers": "^5.7.2",
+    "hardhat": "^2.17.0"
+  }
+}
