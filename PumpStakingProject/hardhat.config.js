@@ -1,13 +1,14 @@
 require("@nomiclabs/hardhat-ethers");
 require("@openzeppelin/hardhat-upgrades");
+require("dotenv").config();
 
-const { INFURA_API_KEY, PRIVATE_KEY } = process.env;
+const { PRIVATE_KEY, SEPOLIA_RPC_URL } = process.env;
 
 module.exports = {
   solidity: "0.8.20",
   networks: {
     sepolia: {
-      url: `https://sepolia.infura.io/v3/${INFURA_API_KEY}`,
+      url: SEPOLIA_RPC_URL,
       accounts: PRIVATE_KEY ? [PRIVATE_KEY] : [],
     },
   },

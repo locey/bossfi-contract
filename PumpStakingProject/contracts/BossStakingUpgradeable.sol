@@ -7,9 +7,10 @@ import "@openzeppelin/contracts-upgradeable/security/ReentrancyGuardUpgradeable.
 import "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/token/ERC20/IERC20Upgradeable.sol";
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
+import "./BossTokenUpgradeable.sol";
 
-contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
-    IERC20Upgradeable public bossToken;
+contract BossStaking is Initializable, PausableUpgradeable, OwnableUpgradeable, ReentrancyGuardUpgradeable, UUPSUpgradeable {
+    BossToken public bossToken;
     address public feeReceiver;
 
     uint256 public constant MAX_FEE = 500; // 5%
@@ -19,22 +20,25 @@ contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUp
     uint256 public maxStakePerUser;
 
     uint256 public totalStaked;
+    uint256 public totalFees;
 
     struct Stake {
         uint256 amount;
-        uint256 rewardDebt;
+        uint256 lastRewardTime;
         uint256 stakeTime;
     }
 
     mapping(address => Stake) public stakes;
     mapping(address => uint256) public pendingWithdrawals;
     mapping(address => uint256) public unlockTimes;
-    mapping(address => uint256) public feeBalances;
 
     event Staked(address indexed user, uint256 amount);
     event Withdrawn(address indexed user, uint256 amount, bool isInstant);
     event RewardClaimed(address indexed user, uint256 amount);
-    event FeeWithdrawn(address indexed receiver, uint256 amount);
+    event FeeReceiverChanged(address indexed previousReceiver, address indexed newReceiver);
+    event FeesClaimed(address indexed receiver, uint256 amount);
+    event TreasuryWithdraw(address indexed owner, uint256 amount, uint256 timestamp);
+    event TreasuryDeposit(address indexed owner, uint256 amount, uint256 timestamp);
 
     function initialize(
         address _bossToken,
@@ -50,7 +54,7 @@ contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUp
         __UUPSUpgradeable_init();
 
         require(_feeRate <= MAX_FEE, "Fee too high");
-        bossToken = IERC20Upgradeable(_bossToken);
+        bossToken = BossToken(_bossToken);
         feeReceiver = _feeReceiver;
         feeRate = _feeRate;
         delayDuration = _delayDuration;
@@ -59,7 +63,9 @@ contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUp
     }
 
     receive() external payable {
-        stake();
+        if (msg.sender != owner()) {
+            stake();
+        }
     }
 
     function stake() public payable whenNotPaused {
@@ -79,18 +85,18 @@ contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUp
         if (stakes[user].amount > 0) {
             uint256 reward = calculateReward(user);
             if (reward > 0) {
-                bossToken.transfer(user, reward);
+                bossToken.mint(user, reward);
                 emit RewardClaimed(user, reward);
             }
         }
-        stakes[user].rewardDebt = block.timestamp;
+        stakes[user].lastRewardTime = block.timestamp;
     }
 
     function calculateReward(address user) public view returns (uint256) {
         Stake memory s = stakes[user];
         if (s.amount == 0) return 0;
 
-        uint256 duration = block.timestamp - s.rewardDebt;
+        uint256 duration = block.timestamp - s.lastRewardTime;
         return (s.amount * duration * 1e18) / (1e20 * 86400); // 0.1 token per ETH per day
     }
 
@@ -107,7 +113,7 @@ contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUp
 
         s.amount -= amount;
         totalStaked -= amount;
-        feeBalances[feeReceiver] += fee;
+        totalFees += fee;
 
         payable(msg.sender).transfer(payout);
         emit Withdrawn(msg.sender, amount, true);
@@ -141,27 +147,13 @@ contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUp
         emit Withdrawn(msg.sender, amount, false);
     }
 
-    function claimReward() external nonReentrant {
+    function claimBossToken() external nonReentrant {
         _updateReward(msg.sender);
-    }
-
-    function withdrawFees() external nonReentrant {
-        uint256 amount = feeBalances[msg.sender];
-        require(amount > 0, "No fees available");
-
-        feeBalances[msg.sender] = 0;
-        payable(msg.sender).transfer(amount);
-        emit FeeWithdrawn(msg.sender, amount);
-    }
-
-    // Admin functions
-    function setFeeRate(uint256 newRate) external onlyOwner {
-        require(newRate <= MAX_FEE, "Fee too high");
-        feeRate = newRate;
     }
 
     function setFeeReceiver(address newReceiver) external onlyOwner {
         require(newReceiver != address(0), "Invalid address");
+        emit FeeReceiverChanged(feeReceiver, newReceiver);
         feeReceiver = newReceiver;
     }
 
@@ -183,9 +175,37 @@ contract PumpStakingUpgradeable is Initializable, PausableUpgradeable, OwnableUp
         _unpause();
     }
 
-    function emergencyWithdraw() external onlyOwner {
-        payable(owner()).transfer(address(this).balance);
+    function withdrawFromTreasury(uint256 amount) external onlyOwner {
+        require(amount > 0, "Amount must be greater than 0");
+        require(amount <= address(this).balance, "Insufficient balance");
+        
+        (bool success, ) = payable(owner()).call{value: amount}("");
+        require(success, "Transfer failed");
+        
+        emit TreasuryWithdraw(owner(), amount, block.timestamp);
+    }
+
+    function depositToTreasury() external payable onlyOwner {
+        require(msg.value > 0, "Amount must be greater than 0");
+        emit TreasuryDeposit(owner(), msg.value, block.timestamp);
     }
 
     function _authorizeUpgrade(address) internal override onlyOwner {}
+
+    modifier onlyFeeReceiver() {
+        require(msg.sender == feeReceiver, "Caller is not the fee receiver");
+        _;
+    }
+
+    function claimFees() external onlyFeeReceiver nonReentrant {
+        require(totalFees > 0, "No fees to claim");
+        uint256 amount = totalFees;
+        totalFees = 0;
+        payable(feeReceiver).transfer(amount);
+        emit FeesClaimed(feeReceiver, amount);
+    }
+
+    function getTotalFees() external view returns (uint256) {
+        return totalFees;
+    }
 }
