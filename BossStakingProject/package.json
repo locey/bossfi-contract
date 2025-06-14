@@ -4,10 +4,12 @@
   "scripts": {
     "test": "hardhat test",
     "deploy": "hardhat run scripts/deploy.js --network sepolia",
+    "deploy:nft": "hardhat run scripts/deploy-nft.js --network sepolia",
     "upgrade": "hardhat run scripts/upgrade.js --network sepolia"
   },
   "devDependencies": {
     "@nomiclabs/hardhat-ethers": "^2.0.6",
+    "@nomiclabs/hardhat-etherscan": "^3.1.7",
     "@openzeppelin/contracts-upgradeable": "^4.9.3",
     "@openzeppelin/hardhat-upgrades": "^1.21.0",
     "chai": "^4.3.7",
