@@ -1,0 +1,56 @@
+{
+  "merkleRoot": "0x198cc57942e3e82babfcb306afbcc1de0f758574fb6a69578a1d19c30e1b82b9",
+  "users": [
+    {
+      "address": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "amount": 100,
+      "proof": [
+        "0x8a3552d60a98e0ade765adddad0a2e420ca9b1eef5f326ba7ab860bb4ea72c94",
+        "0x28ee50ccca7572e60f382e915d3cc323c3cb713b263673ba830ab179d0e5d57f",
+        "0xe5c951f74bc89efa166514ac99d872f6b7a3c11aff63f51246c3742dfa925c9b"
+      ],
+      "leaf": "0x00314e565e0574cb412563df634608d76f5c59d9f817e85966100ec1d48005c0"
+    },
+    {
+      "address": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "amount": 200,
+      "proof": [
+        "0x00314e565e0574cb412563df634608d76f5c59d9f817e85966100ec1d48005c0",
+        "0x28ee50ccca7572e60f382e915d3cc323c3cb713b263673ba830ab179d0e5d57f",
+        "0xe5c951f74bc89efa166514ac99d872f6b7a3c11aff63f51246c3742dfa925c9b"
+      ],
+      "leaf": "0x8a3552d60a98e0ade765adddad0a2e420ca9b1eef5f326ba7ab860bb4ea72c94"
+    },
+    {
+      "address": "0x90F79bf6EB2c4f870365E785982E1f101E93b906",
+      "amount": 150,
+      "proof": [
+        "0xf4ca8532861558e29f9858a3804245bb30f0303cc71e4192e41546237b6ce58b",
+        "0x343750465941b29921f50a28e0e43050e5e1c2611a3ea8d7fe1001090d5e1436",
+        "0xe5c951f74bc89efa166514ac99d872f6b7a3c11aff63f51246c3742dfa925c9b"
+      ],
+      "leaf": "0x1ebaa930b8e9130423c183bf38b0564b0103180b7dad301013b18e59880541ae"
+    },
+    {
+      "address": "0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65",
+      "amount": 300,
+      "proof": [
+        "0x1ebaa930b8e9130423c183bf38b0564b0103180b7dad301013b18e59880541ae",
+        "0x343750465941b29921f50a28e0e43050e5e1c2611a3ea8d7fe1001090d5e1436",
+        "0xe5c951f74bc89efa166514ac99d872f6b7a3c11aff63f51246c3742dfa925c9b"
+      ],
+      "leaf": "0xf4ca8532861558e29f9858a3804245bb30f0303cc71e4192e41546237b6ce58b"
+    },
+    {
+      "address": "0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc",
+      "amount": 250,
+      "proof": [
+        "0x5c0965c65dfb1547d128efb3e61004f43995418da2d36870318fd1d53a6ec3ab"
+      ],
+      "leaf": "0xe5c951f74bc89efa166514ac99d872f6b7a3c11aff63f51246c3742dfa925c9b"
+    }
+  ],
+  "totalUsers": 5,
+  "totalAmount": 1000,
+  "generatedAt": "2025-07-05T06:01:58.604Z"
+}
